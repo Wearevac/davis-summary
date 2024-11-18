@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="davis_summary_vac",
-    version="0.1.0",
+    version="0.1.1",
     author="Niranjan Gopalan",
     author_email="niranjangopalan948@gmail.com",
     description="A package for analyzing CSV files and generating summary reports in HTML",
