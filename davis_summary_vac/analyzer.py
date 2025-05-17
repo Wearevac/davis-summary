@@ -4,6 +4,8 @@ import math
 import base64
 from io import BytesIO
 import argparse
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 def analyze_csv(file_path):
     data = []
@@ -60,6 +62,33 @@ def generate_summary(data):
 
     return summary
 
+def generate_correlation_matrix_image(data):
+    import pandas as pd
+    import matplotlib.pyplot as plt
+    import seaborn as sns
+    from io import BytesIO
+    import base64
+
+    df = pd.DataFrame(data)
+    # Try to convert all columns to numeric where possible
+    for col in df.columns:
+        df[col] = pd.to_numeric(df[col], errors='coerce')
+    numeric_df = df.select_dtypes(include=['float64', 'int64'])
+    if numeric_df.shape[1] < 2:
+        return None  # Not enough numeric columns for correlation
+
+    corr = numeric_df.corr()
+    plt.figure(figsize=(8, 6))
+    sns.heatmap(corr, annot=True, cmap='coolwarm', fmt=".2f")
+    plt.title("Correlation Matrix")
+    buf = BytesIO()
+    plt.tight_layout()
+    plt.savefig(buf, format='png')
+    plt.close()
+    buf.seek(0)
+    img_base64 = base64.b64encode(buf.read()).decode('utf-8')
+    return img_base64
+
 def detect_outliers(values, method='iqr'):
     if len(values) < 4:
         return []
@@ -81,7 +110,7 @@ def count_values(values):
     
     return dict(sorted(value_counts.items(), key=lambda x: x[1], reverse=True))
 
-def generate_html_report(data, summary):
+def generate_html_report(data, summary, corr_img_base64=None):
     html = """
     <html>
     <head>
@@ -115,6 +144,15 @@ def generate_html_report(data, summary):
         <div class="content">
             <h1>Descriptive Summary Report</h1>
     """
+
+    # Add correlation matrix chart if available
+    if corr_img_base64:
+        html += """
+        <div class='section'>
+            <h2>Correlation Matrix</h2>
+            <img src="data:image/png;base64,{}" alt="Correlation Matrix" style="max-width:100%;height:auto;"/>
+        </div>
+        """.format(corr_img_base64)
 
     # Numeric Columns Summary
     html += "<div class='section'><h2>Numeric Columns Summary</h2>"
@@ -173,7 +211,8 @@ def main(csv_file_path, output_html_path):
         return
 
     summary = generate_summary(data)
-    html_report = generate_html_report(data, summary)
+    corr_img_base64 = generate_correlation_matrix_image(data)
+    html_report = generate_html_report(data, summary, corr_img_base64)
 
     try:
         with open(output_html_path, 'w', encoding='utf-8') as f:

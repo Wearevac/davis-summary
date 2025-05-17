@@ -57,13 +57,15 @@ If you'd like to use this package programmatically within a Python script:
 
 ```python
 
-from davis_summary_vac import analyze_csv, generate_summary, generate_html_report
+from davis_summary_vac import analyze_csv, generate_summary, generate_html_report,generate_correlation_matrix_image
 
 data = analyze_csv('data.csv')
 summary = generate_summary(data)
 html_report = generate_html_report(data, summary)
+corr_img_base64 = generate_correlation_matrix_image(data)
 
-with open('output.html', 'w') as file:
+
+with open('output.html', 'w', encoding='utf-8') as file:
     file.write(html_report)
     
 ```
